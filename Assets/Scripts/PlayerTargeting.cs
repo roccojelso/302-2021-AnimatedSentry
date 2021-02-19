@@ -9,14 +9,15 @@ public class PlayerTargeting : MonoBehaviour
     public Transform target;
     public bool wantsToTarget = false;
     public float visionDistance = 10;
+    public float visionAngle = 45;
     private List<TargetableThing> potentialTargets = new List<TargetableThing>();
 
     float cooldownScan = 0;
     float cooldownPick = 0;
 
-    void Start()
+    private void Start()
     {
-        
+        Cursor.lockState = CursorLockMode.Locked; 
     }
 
     void Update()
@@ -24,11 +25,38 @@ public class PlayerTargeting : MonoBehaviour
 
         wantsToTarget = Input.GetButton("Fire2");
 
+        if (!wantsToTarget) target = null;
+
         cooldownScan -= Time.deltaTime; // counting down
-        if (cooldownScan <= -0) ScanForTargets(); // do this when countdown finsished
+        if (cooldownScan <= -0 || (target == null && wantsToTarget)) ScanForTargets(); // do this when countdown finsished
 
         cooldownPick -= Time.deltaTime;
         if (cooldownPick <= 0) PickATarget();
+
+        if (target && !CanSeeThing(target)) target = null;
+        
+
+        
+
+
+    }
+
+    private bool CanSeeThing(Transform thing)
+    {
+
+        if (!thing) return false;
+
+        Vector3 vToThing = thing.position - transform.position;
+
+        if (vToThing.sqrMagnitude > visionDistance * visionDistance) return false;
+
+        if (Vector3.Angle(transform.forward, vToThing) > visionAngle) return false;
+
+        // TODO: check occlusion
+
+        return true;
+
+
 
     }
 
@@ -45,21 +73,15 @@ public class PlayerTargeting : MonoBehaviour
         foreach(TargetableThing thing in things)
         {
             // check how far away thing is
-            Vector3 disToThing = thing.transform.position - transform.position;
 
-            if(disToThing.sqrMagnitude < visionDistance * visionDistance)
+            //if we can see it
+
+            if (CanSeeThing(thing.transform))
             {
-                if(Vector3.Angle(transform.forward, disToThing) < 45)
-                {
-                    potentialTargets.Add(thing);
-                }
-            } 
+                potentialTargets.Add(thing);
+            }
 
-
-            // check direction it is in
         }
-
-
     }
 
     void PickATarget()
@@ -67,7 +89,9 @@ public class PlayerTargeting : MonoBehaviour
 
         cooldownPick = .25f;
 
-        if (target) return; // we already have a target
+        //if (target) return; // we already have a target
+        target = null;
+
 
         float closestDistanceSoFar = 0;
 
@@ -81,6 +105,7 @@ public class PlayerTargeting : MonoBehaviour
                 target = pt.transform;
                 closestDistanceSoFar = dd;
             }
+
         }
 
 

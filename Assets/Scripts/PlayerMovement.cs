@@ -13,7 +13,20 @@ public class PlayerMovement : MonoBehaviour
     public Transform leg1;
     public Transform leg2;
 
+    public float gravityMultiplier = 10;
+    public float jumpImpulse = 5;
+
     private Vector3 inputDirection = new Vector3();
+
+    private float timeLeftGrounded = 0;
+
+    public bool isGrounded
+    {
+        get // return true is pawn is on ground or "coyote=time"
+        {
+            return pawn.isGrounded || timeLeftGrounded > 0;
+        }
+    }
 
     /// <summary>
     /// How fast the player is movering vertically (y-axis), in meters/second
@@ -31,9 +44,12 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        MovePlayer();
-        WiggleLegs();
+        //countdown
+        if (timeLeftGrounded > 0) timeLeftGrounded -= Time.deltaTime;
 
+        MovePlayer();
+        if (isGrounded) WiggleLegs(); // idle and walk animation
+        else AirLegs(); // jump
     }
 
     private void WiggleLegs()
@@ -61,10 +77,20 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    private void AirLegs(){
+
+        leg1.localRotation = AnimMath.Slide(leg1.localRotation, Quaternion.Euler(30, 0, 0));
+        leg2.localRotation = AnimMath.Slide(leg2.localRotation, Quaternion.Euler(-30, 0, 0));
+
+    }
+
     private void MovePlayer()
     {
         float h = Input.GetAxis("Horizontal"); // strafing or side-side
         float v = Input.GetAxis("Vertical"); // forward / backward
+
+        bool isJumpHeld = Input.GetButton("Jump");
+        bool onJumpPress = Input.GetButtonDown("Jump");
 
         bool isTryingToMove = (h != 0 || v != 0);
         if (isTryingToMove)
@@ -79,17 +105,32 @@ public class PlayerMovement : MonoBehaviour
         inputDirection = transform.forward * v + transform.right * h;
         if (inputDirection.sqrMagnitude > 1) inputDirection.Normalize();
 
-        verticalVelocity += 10 * Time.deltaTime;
+        
+
+        // applying gravity
+        verticalVelocity += gravityMultiplier * Time.deltaTime;
 
         // adds later movement to vertical movement 
         Vector3 moveDelta = inputDirection * walkSpeed + verticalVelocity * Vector3.down;
 
         // move character
         CollisionFlags flags = pawn.Move(moveDelta * Time.deltaTime); 
-
-        if(pawn.isGrounded)
+        if (pawn.isGrounded)
         {
             verticalVelocity = 0;
+            timeLeftGrounded = .2f;
         }
+
+
+        if(isGrounded)
+        {
+
+            if (isJumpHeld)
+            {
+                verticalVelocity = -jumpImpulse;
+                timeLeftGrounded = 0;
+            }
+        }
+
     }
 }

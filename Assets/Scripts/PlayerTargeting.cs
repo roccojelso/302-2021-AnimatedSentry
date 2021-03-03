@@ -32,12 +32,16 @@ public class PlayerTargeting : MonoBehaviour
 
     CameraOrbit camOrbit;
 
+    private AudioSource soundPlayer;
+
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
 
         startPosArmL = armL.localPosition;
         startPosArmR = armR.localPosition;
+
+        soundPlayer = GetComponentInChildren<AudioSource>();
 
         camOrbit = Camera.main.GetComponentInParent<CameraOrbit>();
     }
@@ -46,6 +50,7 @@ public class PlayerTargeting : MonoBehaviour
     {
 
         wantsToTarget = Input.GetButton("Fire2");
+
         wantsToAttack = Input.GetButton("Fire1");
 
         if (!wantsToTarget) target = null;
@@ -90,6 +95,7 @@ public class PlayerTargeting : MonoBehaviour
         }
 
         cooldownShoot = 1 / roundsPerSecond;
+        soundPlayer.Play();
         // attack
 
         camOrbit.Shake(.5f);

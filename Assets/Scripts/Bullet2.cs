@@ -5,29 +5,53 @@ using UnityEngine;
 public class Bullet2 : MonoBehaviour
 {
 
-    public float movementSpeed;
-    private GameObject target;
+    private Transform target;
 
-    void Update()
+    public float speed = 70f;
+    public GameObject impactEffect;
+
+
+    public void Seek(Transform _target)
     {
-        transform.Translate(Vector3.forward * Time.deltaTime * movementSpeed);
+        target = _target;
     }
 
-    private void OnTriggerEnter(Collider other)
+    // Update is called once per frame
+    void Update()
     {
-        if (other.tag == "Enemy")
+        if (target == null)
         {
-            PlayerMovement player = other.GetComponent<PlayerMovement>();
+            Destroy(gameObject);
+            return;
+        }
 
-            if (player)
+        Vector3 dir = target.position - transform.position;
+        float distanceThisFrame = speed * Time.deltaTime;
+
+        if (dir.magnitude <= distanceThisFrame)
+        {
+            HitTarget();
+            return;
+        }
+
+        transform.Translate(dir.normalized * distanceThisFrame, Space.World);
+
+        void HitTarget()
+        {
+            GameObject effectIns = (GameObject)Instantiate(impactEffect, transform.position, transform.rotation);
+            Destroy(effectIns, 2f);
+
+            if (target)
             {
-                HealthSystem playerHealth = player.GetComponent<HealthSystem>();
+                HealthSystem playerHealth = target.GetComponent<HealthSystem>();
                 if (playerHealth)
                 {
-                    playerHealth.TakeDamage(10);
+                    playerHealth.TakeDamage(20);
                 }
                 Destroy(gameObject);
             }
+
         }
+
     }
 }

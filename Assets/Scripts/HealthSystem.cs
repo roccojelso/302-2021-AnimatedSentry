@@ -8,6 +8,8 @@ public class HealthSystem : MonoBehaviour
     public float health { get; private set; }
     public float healthMax = 100;
 
+    public GameObject impactEffect;
+
     private void Start()
     {
         health = healthMax;
@@ -24,6 +26,8 @@ public class HealthSystem : MonoBehaviour
 
     public void Die()
     {
+        GameObject effectIns = (GameObject)Instantiate(impactEffect, transform.position, transform.rotation);
+        Destroy(effectIns, 2f);
 
         Destroy(gameObject);
 

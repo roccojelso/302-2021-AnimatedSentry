@@ -56,6 +56,10 @@ public class Sentry2 : MonoBehaviour
         {
             target = nearestEnemy.transform;
         }
+        else
+        {
+            target = null;
+        }
 
     }
 
